@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>백금빛 슬리데린</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#1f5c3f; --green-l:#2f8a5d; --silver:#c9ced6; --gold:#e8cf8a;
+    --ink:#f4efe2; --box:rgba(12,20,16,.86); --line:rgba(201,206,214,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#050806;overflow:hidden}
+  body{font-family:'Gowun Batang',serif;color:var(--ink);user-select:none;-webkit-user-select:none}
+  #game{position:relative;width:100vw;height:100vh;max-width:1280px;margin:0 auto;overflow:hidden;background:#000}
+
+  /* ---------- backgrounds ---------- */
+  #bg{position:absolute;inset:0;transition:background 1s ease;background:#000}
+  #bg::after{content:"";position:absolute;inset:0;pointer-events:none;transition:opacity 1s}
+  .bg-train{background:linear-gradient(180deg,#2b2150 0%,#7a4a7c 35%,#d9787a 62%,#f3b06a 80%,#3a2a2a 80.5%,#2a1d1d 100%)!important}
+  .bg-train::after{opacity:1;background:
+      linear-gradient(90deg,#3a2418 0 4%,transparent 4% 46%,#3a2418 46% 54%,transparent 54% 96%,#3a2418 96%),
+      linear-gradient(180deg,#3a2418 0 8%,transparent 8% 72%,#3a2418 72%)!important}
+  .bg-hall{background:radial-gradient(ellipse at 50% 20%,#6b4a24 0%,#2a1a0e 55%,#120b06 100%)!important}
+  .bg-dungeon{background:radial-gradient(ellipse at 50% 70%,#1d4a34 0%,#0c2017 50%,#030806 100%)!important}
+  .bg-dungeon::after{opacity:1;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 2px,transparent 2px 60px),repeating-linear-gradient(90deg,rgba(0,0,0,.2) 0 2px,transparent 2px 120px)!important}
+  .bg-pitch{background:linear-gradient(180deg,#6fa8dc 0%,#b9d8f0 55%,#7fb069 55.5%,#3f7a3a 100%)!important}
+  .bg-pitch::after{opacity:1;background:
+      radial-gradient(circle at 20% 30%,transparent 22px,#e8cf8a 23px,#e8cf8a 27px,transparent 28px),
+      radial-gradient(circle at 80% 26%,transparent 26px,#e8cf8a 27px,#e8cf8a 31px,transparent 32px),
+      linear-gradient(90deg,transparent calc(20% - 2px),#e8cf8a calc(20% - 2px) calc(20% + 2px),transparent calc(20% + 2px)) 0 34%/100% 22% no-repeat,
+      linear-gradient(90deg,transparent calc(80% - 2px),#e8cf8a calc(80% - 2px) calc(80% + 2px),transparent calc(80% + 2px)) 0 31%/100% 25% no-repeat!important}
+  .bg-library{background:linear-gradient(180deg,#1a0f08,#3b2412 60%,#1a0f08)!important}
+  .bg-library::after{opacity:1;background:
+      repeating-linear-gradient(90deg,#5a3a1e 0 3px,transparent 3px 22px,#2d4a3a 22px 26px,transparent 26px 34px,#6a2a20 34px 39px,transparent 39px 52px),
+      repeating-linear-gradient(180deg,transparent 0 110px,#24150a 110px 124px)!important;mix-blend-mode:screen;opacity:.35!important}
+  .bg-snow{background:linear-gradient(180deg,#8ea4bd 0%,#c9d6e3 60%,#f2f5f8 61%,#dfe7ef 100%)!important}
+  .bg-snow::after{opacity:1;background:
+      linear-gradient(180deg,transparent 0 38%,#5b3f33 38% 61%,transparent 61%) 8% 0/14% 100% no-repeat,
+      linear-gradient(180deg,transparent 0 30%,#7a4d3a 30% 61%,transparent 61%) 30% 0/12% 100% no-repeat,
+      linear-gradient(180deg,transparent 0 42%,#4d3b45 42% 61%,transparent 61%) 74% 0/16% 100% no-repeat,
+      linear-gradient(180deg,transparent 0 34%,#f2c46b 46% 50%,transparent 50%) 32% 0/3% 100% no-repeat!important;opacity:.75!important}
+  .bg-ball{background:radial-gradient(ellipse at 50% 0%,#5b4bb0 0%,#251a5c 45%,#0d0828 100%)!important}
+  .bg-tower{background:linear-gradient(180deg,#02040c 0%,#0b1433 60%,#1c2a55 100%)!important}
+  .bg-tower::after{opacity:1;background:radial-gradient(circle at 78% 18%,#fffbe8 0 34px,rgba(255,250,220,.25) 36px,transparent 90px),
+      linear-gradient(180deg,transparent 78%,#0a0d18 78%)!important}
+  .bg-black{background:#000!important}
+
+  #fx{position:absolute;inset:0;pointer-events:none}
+
+  #locToast{position:absolute;top:22px;left:50%;transform:translate(-50%,-20px);opacity:0;padding:8px 22px;
+    background:rgba(0,0,0,.55);border:1px solid var(--line);border-radius:999px;font-size:15px;letter-spacing:.1em;
+    transition:all .6s;pointer-events:none;white-space:nowrap}
+  #locToast.on{opacity:1;transform:translate(-50%,0)}
+
+  /* ---------- character ---------- */
+  #chara{position:absolute;left:50%;bottom:0;width:min(62vh,520px);transform:translateX(-50%) translateY(30px);opacity:0;
+    transition:opacity .6s, transform .6s;pointer-events:none;filter:drop-shadow(0 10px 30px rgba(0,0,0,.5))}
+  #chara.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  #chara svg{width:100%;height:auto;display:block;animation:breathe 4s ease-in-out infinite;transform-origin:50% 100%}
+  #chara.hop svg{animation:hop .35s ease}
+  #chara.shake svg{animation:shake .4s ease}
+  @keyframes breathe{50%{transform:scaleY(1.008) translateY(-2px)}}
+  @keyframes hop{40%{transform:translateY(-16px)}}
+  @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}
+
+  /* ---------- HUD ---------- */
+  #hud{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;z-index:5}
+  #affBox{background:rgba(0,0,0,.5);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-width:180px}
+  #affBox .lbl{font-size:12px;color:var(--silver);letter-spacing:.08em;margin-bottom:5px}
+  #affBar{height:9px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden}
+  #affFill{height:100%;width:20%;background:linear-gradient(90deg,var(--green-l),#9be0b8,#ffd1dc);transition:width .8s cubic-bezier(.2,.9,.3,1.2)}
+  #menu{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .mbtn{font:inherit;font-size:13px;color:var(--ink);background:rgba(0,0,0,.5);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+  .mbtn:hover{background:rgba(47,138,93,.5)}
+  .mbtn.act{background:var(--green);border-color:var(--silver)}
+
+  .affPop{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:28px;font-weight:700;pointer-events:none;
+    animation:pop 1.4s ease forwards;text-shadow:0 2px 10px rgba(0,0,0,.7);z-index:8}
+  @keyframes pop{0%{opacity:0;transform:translate(-50%,20px) scale(.6)}20%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60px) scale(1)}}
+
+  /* ---------- text box ---------- */
+  #box{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:min(96%,1000px);min-height:150px;
+    background:var(--box);border:1px solid var(--line);border-radius:16px;padding:30px 30px 22px;cursor:pointer;z-index:4;
+    box-shadow:0 0 0 4px rgba(31,92,63,.25),0 20px 50px rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+  #box.hidden{display:none}
+  #nameTag{position:absolute;top:-17px;left:24px;padding:5px 18px;border-radius:8px;font-weight:700;font-size:16px;
+    background:linear-gradient(180deg,var(--green-l),var(--green));border:1px solid var(--silver);color:#fff;letter-spacing:.05em}
+  #nameTag.player{background:linear-gradient(180deg,#6b5a9a,#3f3266)}
+  #nameTag.empty{display:none}
+  #text{font-size:clamp(16px,2.3vw,20px);line-height:1.75;white-space:pre-wrap;min-height:3.5em}
+  #text.narr{color:#d8d3c4;font-style:normal}
+  #nextArrow{position:absolute;right:22px;bottom:14px;font-size:14px;color:var(--silver);opacity:0;animation:blink 1s infinite}
+  #box.done #nextArrow{opacity:1}
+  @keyframes blink{50%{opacity:.2}}
+
+  /* ---------- choices ---------- */
+  #choices{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:6;
+    background:rgba(0,0,0,.35);padding:0 16px 170px}
+  #choices.on{display:flex}
+  .choice{font:inherit;font-size:clamp(15px,2.2vw,18px);color:var(--ink);width:min(560px,100%);padding:14px 20px;cursor:pointer;
+    background:linear-gradient(180deg,rgba(25,45,35,.95),rgba(12,22,17,.95));border:1px solid var(--line);border-radius:12px;
+    transition:transform .15s,border-color .15s,box-shadow .15s;animation:cin .35s ease both}
+  .choice:hover,.choice:focus{transform:scale(1.03);border-color:var(--gold);box-shadow:0 0 20px rgba(232,207,138,.3);outline:none}
+  @keyframes cin{from{opacity:0;transform:translateY(12px)}}
+
+  /* ---------- overlays ---------- */
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:10;padding:16px;text-align:center}
+  .screen.on{display:flex}
+  #title{background:radial-gradient(ellipse at 50% 35%,#1f5c3f 0%,#0b1a12 55%,#030604 100%)}
+  #title h1{font-family:'Nanum Myeongjo',serif;font-size:clamp(34px,7vw,64px);letter-spacing:.06em;
+    background:linear-gradient(180deg,#fff,#c9ced6 60%,#8a919c);-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 4px 20px rgba(155,224,184,.35))}
+  #title .sub{color:var(--silver);margin:10px 0 36px;letter-spacing:.25em;font-size:clamp(12px,2vw,15px)}
+  .tbtn{font:inherit;font-size:18px;color:var(--ink);width:240px;padding:12px;margin:6px;cursor:pointer;border-radius:10px;
+    background:rgba(0,0,0,.35);border:1px solid var(--line);transition:all .2s}
+  .tbtn:hover:not(:disabled){background:var(--green);border-color:var(--silver);letter-spacing:.08em}
+  .tbtn:disabled{opacity:.35;cursor:default}
+  #endList{margin-top:22px;font-size:14px;color:var(--silver);line-height:1.9}
+  #titleChara{position:absolute;right:-4%;bottom:0;width:min(50vh,420px);opacity:.25;pointer-events:none}
+  @media (max-width:700px){#titleChara{display:none}}
+
+  #nameScreen{background:rgba(3,6,4,.92)}
+  #nameScreen p{margin-bottom:18px;font-size:18px}
+  #nameInput{font:inherit;font-size:20px;text-align:center;padding:10px 16px;width:min(280px,90%);border-radius:10px;
+    border:1px solid var(--silver);background:rgba(255,255,255,.06);color:var(--ink);outline:none;margin-bottom:14px}
+
+  #chapter{background:#000;z-index:9;transition:opacity .6s}
+  #chapter .num{color:var(--silver);letter-spacing:.4em;font-size:14px;margin-bottom:12px}
+  #chapter .ttl{font-family:'Nanum Myeongjo',serif;font-size:clamp(26px,5vw,42px)}
+
+  #ending{background:radial-gradient(ellipse at center,rgba(20,40,30,.9),rgba(0,0,0,.96));z-index:11}
+  #ending .kind{letter-spacing:.4em;color:var(--gold);font-size:15px;margin-bottom:12px}
+  #ending .ttl{font-family:'Nanum Myeongjo',serif;font-size:clamp(28px,5.5vw,48px);margin-bottom:14px}
+  #ending .desc{max-width:520px;line-height:1.8;color:#d8d3c4;margin-bottom:28px}
+
+  #logScreen{background:rgba(0,0,0,.9);justify-content:flex-start;padding:60px 16px 16px}
+  #logList{width:min(860px,100%);overflow-y:auto;flex:1;text-align:left;padding-right:8px}
+  #logList .row{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);line-height:1.6}
+  #logList .who{color:#9be0b8;font-weight:700;margin-right:8px}
+  #logClose{position:absolute;top:14px;right:16px}
+
+  #toast{position:absolute;bottom:190px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);border:1px solid var(--line);
+    padding:8px 18px;border-radius:999px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:12;font-size:14px}
+  #toast.on{opacity:1}
+  #fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s;z-index:9}
+  #fade.on{opacity:1}
+
+  @media (max-width:600px){
+    #box{padding:26px 18px 20px;min-height:140px}
+    #affBox{min-width:130px}
+    .mbtn{padding:5px 7px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="bg" class="bg-black"></div>
+  <canvas id="fx"></canvas>
+  <div id="locToast"></div>
+  <div id="chara"></div>
+
+  <div id="hud" style="display:none">
+    <div id="affBox"><div class="lbl">💚 말포이 호감도 <span id="affNum">20</span></div><div id="affBar"><div id="affFill"></div></div></div>
+    <div id="menu">
+      <button class="mbtn" id="btnAuto">자동</button>
+      <button class="mbtn" id="btnSkip">스킵</button>
+      <button class="mbtn" id="btnLog">기록</button>
+      <button class="mbtn" id="btnSave">저장</button>
+      <button class="mbtn" id="btnLoad">불러오기</button>
+      <button class="mbtn" id="btnTitle">타이틀</button>
+    </div>
+  </div>
+
+  <div id="box" class="hidden">
+    <div id="nameTag" class="empty"></div>
+    <div id="text"></div>
+    <div id="nextArrow">▼</div>
+  </div>
+  <div id="choices"></div>
+
+  <div id="title" class="screen on">
+    <div id="titleChara"></div>
+    <h1>백금빛 슬리데린</h1>
+    <div class="sub">말포이 TS · 호그와트 연애 시뮬레이션</div>
+    <button class="tbtn" id="tStart">새 게임</button>
+    <button class="tbtn" id="tLoad">이어하기</button>
+    <div id="endList"></div>
+  </div>
+
+  <div id="nameScreen" class="screen">
+    <p>당신의 이름을 알려주세요.</p>
+    <input id="nameInput" maxlength="8" placeholder="이름 입력" autocomplete="off">
+    <button class="tbtn" id="nameOk">호그와트로</button>
+  </div>
+
+  <div id="chapter" class="screen"><div class="num"></div><div class="ttl"></div></div>
+
+  <div id="ending" class="screen">
+    <div class="kind"></div><div class="ttl"></div><div class="desc"></div>
+    <button class="tbtn" id="endBack">타이틀로</button>
+  </div>
+
+  <div id="logScreen" class="screen">
+    <button class="mbtn" id="logClose">닫기 ✕</button>
+    <div id="logList"></div>
+  </div>
+
+  <div id="fade"></div>
+  <div id="toast"></div>
+</div>
+
+<script>
+/* =========================================================
+   Portrait (SVG) — expression system
+   ========================================================= */
+const SKIN = '#fbe6d8';
+const EXPR = {
+  neutral:  {eyes:'open',   brow:'flat',    mouth:'flat'},
+  smug:     {eyes:'half',   brow:'raised',  mouth:'smirk'},
+  angry:    {eyes:'sharp',  brow:'angry',   mouth:'frown', vein:true},
+  blush:    {eyes:'side',   brow:'worried', mouth:'pout',  blush:2, sweat:true},
+  sad:      {eyes:'down',   brow:'worried', mouth:'sad'},
+  surprised:{eyes:'wide',   brow:'up',      mouth:'o'},
+  smile:    {eyes:'closed', brow:'soft',    mouth:'smile', blush:1},
+  shy:      {eyes:'down',   brow:'soft',    mouth:'tiny',  blush:2},
+};
+const BROWS = {
+  flat:   ['M140 234 Q161 228 182 233','M218 233 Q239 228 260 234'],
+  raised: ['M140 234 Q161 229 182 234','M218 229 Q239 217 260 225'],
+  angry:  ['M140 227 Q161 230 183 239','M217 239 Q239 230 260 227'],
+  worried:['M140 237 Q161 233 182 227','M218 227 Q239 233 260 237'],
+  up:     ['M140 226 Q161 214 182 223','M218 223 Q239 214 260 226'],
+  soft:   ['M142 232 Q161 225 180 230','M220 230 Q239 225 258 232'],
+};
+const MOUTHS = {
+  flat:  '<path d="M190 323 Q200 325 210 323" stroke="#9a5a58" stroke-width="3" fill="none" stroke-linecap="round"/>',
+  smirk: '<path d="M187 324 Q203 326 215 314" stroke="#9a5a58" stroke-width="3" fill="none" stroke-linecap="round"/>',
+  frown: '<path d="M187 327 Q200 317 213 327" stroke="#9a5a58" stroke-width="3" fill="none" stroke-linecap="round"/>',
+  pout:  '<path d="M193 325 Q200 319 207 325" stroke="#9a5a58" stroke-width="3" fill="none" stroke-linecap="round"/>',
+  sad:   '<path d="M189 328 Q200 320 211 328" stroke="#9a5a58" stroke-width="3" fill="none" stroke-linecap="round"/>',
+  o:     '<ellipse cx="200" cy="326" rx="7" ry="9" fill="#a8505a"/><ellipse cx="200" cy="330" rx="4" ry="3" fill="#d9808a"/>',
+  smile: '<path d="M185 317 Q200 336 215 317 Q200 323 185 317Z" fill="#b85a64" stroke="#9a5a58" stroke-width="2" stroke-linejoin="round"/>',
+  tiny:  '<path d="M195 323 Q200 327 205 323" stroke="#9a5a58" stroke-width="3" fill="none" stroke-linecap="round"/>',
+};
+function eye(cx, cy, st, side){
+  const lash = (y1,yc,y2)=>`<path d="M${cx-24} ${cy+y1} Q${cx} ${cy+yc} ${cx+24} ${cy+y2}" stroke="#3b3430" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M${cx+side*22} ${cy+(side>0?y2:y1)} l${side*7} -6" stroke="#3b3430" stroke-width="3" stroke-linecap="round"/>`;
+  const ball = (dx=0,dy=0,ry=14,ir=1)=>`<ellipse cx="${cx}" cy="${cy}" rx="20" ry="${ry}" fill="#fff"/>
+    <ellipse cx="${cx+dx}" cy="${cy+1+dy}" rx="${11*ir}" ry="${13*ir}" fill="url(#iris)"/>
+    <ellipse cx="${cx+dx}" cy="${cy+2+dy}" rx="${5*ir}" ry="${6*ir}" fill="#262b33"/>
+    <circle cx="${cx+dx+4}" cy="${cy-4+dy}" r="3.2" fill="#fff"/><circle cx="${cx+dx-4}" cy="${cy+6+dy}" r="1.5" fill="#fff" opacity=".8"/>`;
+  const lid = (y)=>`<path d="M${cx-26} ${cy-22} L${cx+26} ${cy-22} L${cx+26} ${cy+y} Q${cx} ${cy+y-5} ${cx-26} ${cy+y}Z" fill="${SKIN}"/>`;
+  switch(st){
+    case 'wide':   return ball(0,0,17,.8)+lash(-10,-27,-10);
+    case 'half':   return ball(2,2)+lid(-1)+lash(-1,-7,-1);
+    case 'sharp':  return ball(0,2)+lid(side<0?-6:-6)+`<path d="M${cx-24} ${cy-(side<0?10:2)} L${cx+24} ${cy-(side<0?2:10)}" stroke="#3b3430" stroke-width="4.5" stroke-linecap="round"/>`;
+    case 'side':   return ball(-7,2)+lid(-5)+lash(-5,-11,-5);
+    case 'down':   return ball(0,4)+lid(-4)+lash(-4,-10,-4);
+    case 'closed': return `<path d="M${cx-20} ${cy+3} Q${cx} ${cy-13} ${cx+20} ${cy+3}" stroke="#3b3430" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
+    default:       return ball()+lash(-6,-20,-5);
+  }
+}
+function portrait(f){
+  const e = EXPR[f] || EXPR.neutral;
+  const [bl,br] = BROWS[e.brow];
+  return `<svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset=".45" stop-color="#ece2c4"/><stop offset="1" stop-color="#cbbb90"/></linearGradient>
+    <radialGradient id="iris" cx=".5" cy=".35" r=".7"><stop offset="0" stop-color="#c7d0da"/><stop offset=".6" stop-color="#7d8a98"/><stop offset="1" stop-color="#4a5562"/></radialGradient>
+    <pattern id="tie" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(40)"><rect width="16" height="16" fill="#1f5c3f"/><rect width="16" height="4" y="6" fill="#c9ced6"/></pattern>
+  </defs>
+  <!-- back hair -->
+  <path d="M96 230 Q78 110 200 92 Q322 110 304 230 L322 470 Q306 520 272 498 L262 380 L138 380 L128 498 Q94 520 78 470Z" fill="url(#hair)"/>
+  <!-- body -->
+  <path d="M175 330 L225 330 L228 412 L172 412Z" fill="#efcfbe"/>
+  <path d="M52 600 Q62 452 140 410 L200 436 L260 410 Q338 452 348 600Z" fill="#1b1b22"/>
+  <path d="M140 410 L200 436 L182 600 L170 600 Q150 500 140 410Z M260 410 L200 436 L218 600 L230 600 Q250 500 260 410Z" fill="#23232c"/>
+  <path d="M146 414 L200 440 L200 446 L144 420Z M254 414 L200 440 L200 446 L256 420Z" fill="#2f8a5d"/>
+  <path d="M162 408 L200 505 L238 408 L224 398 L200 432 L176 398Z" fill="#f4f1ea"/>
+  <path d="M176 398 L200 432 L186 444 L166 410Z M224 398 L200 432 L214 444 L234 410Z" fill="#fff" stroke="#d9d4ca" stroke-width="1.5"/>
+  <path d="M191 432 L209 432 L205 447 L195 447Z" fill="url(#tie)"/>
+  <path d="M195 447 L205 447 L213 525 L200 548 L187 525Z" fill="url(#tie)"/>
+  <path d="M110 488 L146 488 L146 516 Q128 534 110 516Z" fill="#1f5c3f" stroke="#c9ced6" stroke-width="2.5"/>
+  <path d="M136 496 Q120 496 124 504 Q132 510 120 514" stroke="#c9ced6" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- face -->
+  <path d="M118 236 Q116 322 200 368 Q284 322 282 236 Q282 140 200 140 Q118 140 118 236Z" fill="${SKIN}"/>
+  <path d="M170 360 Q200 372 230 360 Q216 380 200 382 Q184 380 170 360Z" fill="#e9c6b3" opacity=".6"/>
+  ${e.blush ? `<g opacity="${e.blush>1?.75:.45}"><ellipse cx="148" cy="298" rx="20" ry="9" fill="#ff8a9a"/><ellipse cx="252" cy="298" rx="20" ry="9" fill="#ff8a9a"/>
+    ${e.blush>1?'<path d="M138 296 l6 -7 M148 297 l6 -7 M158 298 l6 -7 M242 298 l6 -7 M252 297 l6 -7 M262 296 l6 -7" stroke="#e85a70" stroke-width="2" stroke-linecap="round"/>':''}</g>` : ''}
+  ${eye(162,264,e.eyes,-1)}${eye(238,264,e.eyes,1)}
+  <path d="${bl}" stroke="#bfae84" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="${br}" stroke="#bfae84" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M201 288 L197 300 L202 301" stroke="#d9a894" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  ${MOUTHS[e.mouth]}
+  <!-- front hair -->
+  <path d="M106 250 Q96 138 200 116 Q306 128 298 246 Q288 192 262 168 Q254 206 226 218 Q236 186 222 162 Q194 204 154 214 Q172 188 168 166 Q138 200 106 250Z" fill="url(#hair)"/>
+  <path d="M112 222 Q92 330 108 430 Q122 386 132 334 Q126 280 130 238Z" fill="url(#hair)"/>
+  <path d="M288 222 Q308 330 292 430 Q278 386 268 334 Q274 280 270 238Z" fill="url(#hair)"/>
+  <path d="M148 146 Q200 126 254 146" stroke="#fff" stroke-width="6" fill="none" opacity=".6" stroke-linecap="round"/>
+  <path d="M124 190 Q128 172 140 162" stroke="#fff" stroke-width="4" fill="none" opacity=".5" stroke-linecap="round"/>
+  <!-- hair clip (silver snake) -->
+  <rect x="262" y="176" width="34" height="9" rx="4" transform="rotate(-28 279 180)" fill="#2f8a5d" stroke="#c9ced6" stroke-width="2"/>
+  <circle cx="290" cy="171" r="3" fill="#c9ced6"/>
+  ${e.vein ? '<path d="M268 150 l8 8 M276 150 l-8 8 M264 154 h16 M272 146 v16" stroke="#e0485a" stroke-width="3" stroke-linecap="round"/>' : ''}
+  ${e.sweat ? '<path d="M284 230 Q294 248 286 254 Q276 250 284 230Z" fill="#bfe3ff" stroke="#7fb8e0" stroke-width="1.5"/>' : ''}
+</svg>`;
+}
+
+/* =========================================================
+   Script
+   ========================================================= */
+const BG_NAME = {train:'호그와트 급행열차', hall:'대연회장', dungeon:'지하 감옥 · 마법약 교실', pitch:'퀴디치 경기장',
+  library:'도서관 · 금지 구역 근처', snow:'호그스미드 마을', ball:'크리스마스 무도회', tower:'천문탑', black:''};
+const M = '말포이', ME = '{name}';
+const S = [
+{l:'start'},
+{ch:['PROLOGUE','9와 3/4 승강장 너머']},
+{bg:'train'},
+{n:'9와 3/4 승강장을 지나 호그와트 급행열차에 오른 지 몇 시간째.'},
+{n:'빈 객실을 찾아 헤매던 나는, 마지막 칸의 문을 열었다.'},
+{m:'...뭐야. 노크도 없이 들어오는 건 어느 집안 교육이지?', f:'surprised'},
+{n:'창가에 앉은 소녀. 노을빛을 받은 백금색 머리카락이 반짝였다.\n차가운 회색 눈동자가 나를 위아래로 훑는다.'},
+{m:'처음 보는 얼굴이네. 전학생? ...뭐, 이름 정도는 들어주지.', f:'smug'},
+{choice:[
+  {t:'"내 이름은 {name}. 잘 부탁해!"', a:5, go:'p_a'},
+  {t:'"이름은 그쪽이 먼저 대는 게 예의 아냐?"', a:10, go:'p_b'},
+  {t:'(대꾸 없이 맞은편에 앉는다)', a:-5, go:'p_c'},
+]},
+{l:'p_a'},
+{m:'{name}... 흥, 최소한의 예의는 있네.', f:'neutral'},
+{m:'난 말포이. 드레이코 말포이. 이 이름, 앞으로 자주 듣게 될 거야.', f:'smug'},
+{go:'p_join'},
+{l:'p_b'},
+{m:'...뭐?', f:'surprised'},
+{m:'하! 재밌네. 말포이 가문 앞에서 그런 소리를 하는 애는 처음이야.', f:'smug'},
+{m:'좋아, 특별히 기억해 둬. 드레이코 말포이. ...그쪽은?', f:'neutral'},
+{y:'{name}.'},
+{m:'{name}. 기억해 두지. 건방진 녀석 명단에.', f:'smug'},
+{go:'p_join'},
+{l:'p_c'},
+{m:'이봐! 내 말 안 들려?!', f:'angry'},
+{m:'...아버지가 이 일을 들으시게 될 거야!', f:'angry'},
+{n:'그녀는 한참을 씩씩대다가, 결국 먼저 이름을 밝혔다. 드레이코 말포이라고.'},
+{go:'p_join'},
+{l:'p_join'},
+{m:'그래서. 넌 어느 기숙사로 갈 생각이지?', f:'neutral'},
+{m:'설마 그리핀도르 같은 데는 아니겠지?', f:'smug'},
+{choice:[
+  {t:'"당연히 슬리데린이지."', a:10, set:{house:'슬리데린'}, go:'h_s'},
+  {t:'"그리핀도르. 용기 있는 자들의 기숙사!"', a:-5, set:{house:'그리핀도르'}, go:'h_g'},
+  {t:'"래번클로가 좋을 것 같아."', a:5, set:{house:'래번클로'}, go:'h_r'},
+  {t:'"후플푸프! 다들 착하다던데."', a:0, set:{house:'후플푸프'}, go:'h_h'},
+]},
+{l:'h_s'},
+{m:'...안목은 있네.', f:'surprised'},
+{m:'좋아. 같은 테이블에 앉게 되면, 특별히 내 옆자리를 허락해 주지.', f:'smile'},
+{go:'h_join'},
+{l:'h_g'},
+{m:'그리핀도르?! 포터 같은 녀석들이랑 어울리겠다고?', f:'angry'},
+{m:'...실망이야. 조금은 말이 통할 줄 알았는데.', f:'sad'},
+{go:'h_join'},
+{l:'h_r'},
+{m:'래번클로라. 머리는 좀 쓰나 보네.', f:'neutral'},
+{m:'나쁘지 않아. 시험 기간에 노트 정도는 빌려줄 수 있겠지?', f:'smug'},
+{go:'h_join'},
+{l:'h_h'},
+{m:'후플푸프? 푸흡...', f:'smug'},
+{m:'아, 아니야. 웃은 거 아니야. ...뭐, 너한텐 잘 어울리네.', f:'smile'},
+{go:'h_join'},
+{l:'h_join'},
+{bg:'hall'},
+{hide:1},
+{n:'그날 밤, 대연회장. 마법의 분류 모자는 내 머리에 닿자마자 외쳤다.'},
+{n:'"{house}!"'},
+{n:'슬리데린 테이블 쪽에서, 백금빛 머리의 소녀가 이쪽을 힐끔 쳐다보는 게 보였다.'},
+
+/* ---------- Chapter 1 ---------- */
+{ch:['CHAPTER 1','망각의 묘약']},
+{bg:'dungeon'},
+{n:'개학 첫 주. 습하고 서늘한 지하 감옥의 마법약 교실.'},
+{n:'스네이프 교수의 지시로 2인 1조가 되었는데... 내 짝은 하필.'},
+{m:'또 너야? 운명의 장난도 정도가 있지.', f:'angry'},
+{m:'방해만 하지 마. 이 망각의 묘약은 내가 완벽하게 만들 테니까.', f:'smug'},
+{n:'자신만만하게 재료를 넣으려는 그녀의 손을 봤다.\n...레테 강물이 아니라, 옆에 있던 아르마딜로 담즙 병이다.'},
+{choice:[
+  {t:'"잠깐! 그거 병 잘못 집었어!"', a:10, go:'c1_a'},
+  {t:'(조용히 지켜본다)', a:-5, go:'c1_b'},
+  {t:'(그녀가 한눈판 사이 몰래 병을 바꿔놓는다)', a:15, go:'c1_c'},
+]},
+{l:'c1_a'},
+{m:'뭐? ...어.', f:'surprised'},
+{m:'아, 알고 있었어! 너한테 관찰력이 있는지 시험해 본 거야.', f:'blush'},
+{n:'귀 끝까지 새빨개진 채로 그녀는 병을 바꿔 들었다.'},
+{m:'...통과야. 일단은.', f:'shy'},
+{go:'c1_join'},
+{l:'c1_b'},
+{n:'펑!! 솥에서 초록색 연기가 뭉게뭉게 피어올랐다.'},
+{m:'콜록, 콜록...! 너, 알고 있었지?! 왜 말 안 했어!', f:'angry'},
+{m:'...두고 봐. 이 빚은 반드시 갚아줄 테니까.', f:'sad'},
+{go:'c1_join'},
+{l:'c1_c'},
+{n:'그녀가 스네이프 교수 쪽을 보는 사이, 재빨리 병을 바꿔치기했다.'},
+{n:'잠시 후. 솥 안에는 투명하게 빛나는 완벽한 망각의 묘약이 완성되었다.'},
+{m:'봤지? 이게 말포이의 실력이야.', f:'smug'},
+{n:'...수업이 끝난 뒤, 어두운 복도. 그녀가 내 소매를 잡아당겼다.'},
+{m:'...아까, 병 바꿔놓은 거. 봤어.', f:'shy'},
+{m:'생색 안 낸 건 칭찬해 주지. ...고마워. 한 번만 말할 거야.', f:'blush'},
+{go:'c1_join'},
+{l:'c1_join'},
+{hide:1},
+{n:'그날 이후로, 마법약 시간마다 내 옆자리는 늘 그녀의 차지가 되었다.'},
+
+/* ---------- Chapter 2 ---------- */
+{ch:['CHAPTER 2','스니치를 쫓는 소녀']},
+{bg:'pitch'},
+{n:'퀴디치 시즌 개막전. 슬리데린 대 그리핀도르.'},
+{n:'슬리데린의 수색꾼은 다름 아닌 말포이였다.'},
+{n:'경기 직전, 탈의실 앞 복도. 빗자루를 꼭 쥔 그녀의 손이 미세하게 떨리고 있었다.'},
+{m:'...뭘 봐.', f:'angry'},
+{m:'떨긴 누가 떨어. 추워서 그런 거야. 스코틀랜드 날씨 알잖아.', f:'blush'},
+{choice:[
+  {t:'"넌 할 수 있어. 관중석에서 응원할게."', a:10, go:'c2_a'},
+  {t:'"포터한테 지면 어떡하려고?"', a:-10, go:'c2_b'},
+  {t:'(말없이 내 목도리를 둘러준다)', a:15, go:'c2_c'},
+]},
+{l:'c2_a'},
+{m:'누, 누가 네 응원 따위 필요하대?', f:'blush'},
+{m:'...그래도 관중석에서 잘 보기나 해. 한눈팔면 가만 안 둬.', f:'shy'},
+{go:'c2_join'},
+{l:'c2_b'},
+{m:'...닥쳐.', f:'angry', fx:'shake'},
+{m:'너까지 그런 소리 하지 마. 다들 그렇게 생각하는 거 알아.', f:'sad'},
+{go:'c2_join'},
+{l:'c2_c'},
+{m:'뭐, 뭐 하는 거야?!', f:'surprised', fx:'hop'},
+{m:'...이거, {house} 목도리잖아. 색깔도 안 맞는데.', f:'blush'},
+{m:'경기 끝나고 돌려줄게. ...아마도.', f:'shy'},
+{go:'c2_join'},
+{l:'c2_join'},
+{hide:1},
+{n:'경기는 치열했다. 마지막 순간, 두 수색꾼이 동시에 스니치를 향해 몸을 던졌고——'},
+{n:'황금빛 날개는, 아슬아슬하게 그녀의 손끝을 스쳐 지나갔다.'},
+{n:'경기가 끝난 뒤. 텅 빈 관중석 꼭대기에 그녀가 혼자 앉아 있었다.'},
+{m:'...졌어. 웃고 싶으면 웃어.', f:'sad'},
+{choice:[
+  {t:'"아니. 오늘 경기장에서 제일 멋있었던 건 너였어."', a:10, go:'c2_d'},
+  {t:'"아버지가 이 일을 들으시게 될 거야!" (흉내 낸다)', a:10, go:'c2_e'},
+  {t:'"다음엔 이길 수 있을 거야."', a:5, go:'c2_f'},
+]},
+{l:'c2_d'},
+{m:'...!', f:'surprised'},
+{m:'바보. 진 사람한테 그런 말 하는 거, 반칙이야.', f:'shy'},
+{go:'c2_join2'},
+{l:'c2_e'},
+{m:'...너, 지금 나 흉내 낸 거야?', f:'angry'},
+{m:'큭... 하하하! 하나도 안 닮았어! 목소리가 그게 뭐야!', f:'smile', fx:'hop'},
+{n:'그녀가 소리 내어 웃는 걸, 나는 처음 봤다.'},
+{go:'c2_join2'},
+{l:'c2_f'},
+{m:'당연하지. 다음엔 포터 녀석 코를 납작하게 해줄 거야.', f:'smug'},
+{go:'c2_join2'},
+{l:'c2_join2'},
+{hide:1},
+
+/* ---------- Chapter 3 ---------- */
+{ch:['CHAPTER 3','한밤의 도서관']},
+{bg:'library'},
+{n:'기말 시험을 앞둔 깊은 밤. 몰래 빠져나온 도서관에서, 익숙한 백금빛 머리를 발견했다.'},
+{m:'쉿! ...너 여기서 뭐 해? 필치한테 들키면 둘 다 끝장이야.', f:'surprised'},
+{n:'그때. 복도 끝에서 절뚝이는 발소리와 함께 고양이 울음소리가 들려왔다. 노리스 부인이다.'},
+{choice:[
+  {t:'"내가 시선을 끌게. 넌 빨리 도망가!"', a:15, go:'c3_a'},
+  {t:'(그녀의 손을 잡고 책장 뒤로 숨는다)', a:10, go:'c3_b'},
+  {t:'(혼자 재빨리 도망친다)', a:-15, go:'c3_c'},
+]},
+{l:'c3_a'},
+{m:'바보야?! 그럼 너만—', f:'surprised'},
+{n:'대답 대신 나는 일부러 책 더미를 넘어뜨리고 반대편으로 뛰었다.'},
+{n:'...결국 붙잡혀서 {house} 점수 10점이 깎였다.'},
+{n:'다음 날 아침. 내 자리 위에 초콜릿 개구리 하나와 쪽지가 놓여 있었다.\n『멍청이. — D.M.』'},
+{m:'...뭘 그렇게 웃어. 남는 거 버리기 아까워서 준 거야.', f:'blush'},
+{go:'c3_join'},
+{l:'c3_b'},
+{n:'좁은 책장 틈. 숨소리가 들릴 만큼 가까운 거리.'},
+{m:'...너무 붙지 마.', f:'blush'},
+{m:'심장 소리... 들리잖아. 네 거 말이야. 네 거.', f:'shy'},
+{n:'필치의 발소리가 멀어질 때까지, 그녀는 내 손을 놓지 않았다.'},
+{go:'c3_join'},
+{l:'c3_c'},
+{n:'뒤에서 "야!" 하는 작은 외침이 들렸지만 돌아보지 않았다.'},
+{m:'...배신자. 잊지 않을 거야.', f:'angry'},
+{n:'다음 날, 그녀는 슬리데린 점수 10점이 깎인 채 나를 노려보고 있었다.'},
+{go:'c3_join'},
+{l:'c3_join'},
+{n:'며칠 뒤, 다시 찾은 도서관. 그녀는 책에 얼굴을 묻은 채 중얼거렸다.'},
+{m:'...말포이 가문의 딸은 완벽해야 해.', f:'sad'},
+{m:'1등이 아니면 의미가 없어. 아버지는 늘 그렇게 말씀하시거든.', f:'sad'},
+{choice:[
+  {t:'"가문 말고, 네가 진짜 하고 싶은 건 뭐야?"', a:15, go:'c3_d'},
+  {t:'"넌 이미 충분히 대단해."', a:10, go:'c3_e'},
+  {t:'"힘들겠네..."', a:0, go:'c3_f'},
+]},
+{l:'c3_d'},
+{m:'...뭐?', f:'surprised'},
+{m:'그런 질문... 처음 받아봐.', f:'sad'},
+{m:'...마법약 연구. 아무도 모르는 약을 만들어 보고 싶어. 내 이름으로.', f:'shy'},
+{m:'비웃으면 저주 걸 거야.', f:'blush'},
+{go:'c3_join2'},
+{l:'c3_e'},
+{m:'...당연하지. 내가 누군데.', f:'smug'},
+{m:'그래도... 누가 그렇게 말해주는 건, 나쁘지 않네.', f:'shy'},
+{go:'c3_join2'},
+{l:'c3_f'},
+{m:'동정은 필요 없어.', f:'neutral'},
+{m:'잊어버려. 괜한 소리 했네.', f:'sad'},
+{go:'c3_join2'},
+{l:'c3_join2'},
+{hide:1},
+
+/* ---------- Chapter 4 ---------- */
+{ch:['CHAPTER 4','눈 내리는 호그스미드']},
+{bg:'snow'},
+{n:'첫눈이 내린 주말. 호그스미드 방문일 공지가 붙었다.'},
+{m:'{name}. ...이번 주말에 누구랑 가?', f:'neutral'},
+{choice:[
+  {t:'"너랑 가고 싶은데."', a:10, go:'c4_a'},
+  {t:'"왜? 같이 가자고?"', a:5, go:'c4_b'},
+  {t:'"친구들이랑 가기로 했어."', a:-5, go:'c4_c'},
+]},
+{l:'c4_a'},
+{m:'...!', f:'surprised'},
+{m:'흥. 마침 짐꾼이 필요했어. 따라와도 좋아.', f:'blush'},
+{go:'c4_join'},
+{l:'c4_b'},
+{m:'누, 누가! 착각하지 마!', f:'angry', fx:'shake'},
+{m:'...하지만 네가 그렇게까지 원한다면, 어쩔 수 없지.', f:'blush'},
+{go:'c4_join'},
+{l:'c4_c'},
+{m:'...그래. 그냥 물어본 거야.', f:'sad'},
+{n:'그런데 그날 오후, 쓰리 브룸스틱스 앞에서 혼자 서성이는 그녀와 마주쳤다.'},
+{m:'우, 우연이네. 정말 우연이야.', f:'blush'},
+{go:'c4_join'},
+{l:'c4_join'},
+{n:'따뜻한 쓰리 브룸스틱스 안. 김이 피어오르는 버터맥주 두 잔.'},
+{m:'...따뜻하네.', f:'smile'},
+{n:'한 모금 마신 그녀의 윗입술에, 하얀 거품 수염이 생겼다.'},
+{choice:[
+  {t:'(손수건으로 살짝 닦아준다)', a:10, go:'c4_d'},
+  {t:'"말포이, 콧수염 멋지다."', a:5, go:'c4_e'},
+  {t:'(조용히 웃으며 감상한다)', a:0, go:'c4_f'},
+]},
+{l:'c4_d'},
+{m:'——!!!', f:'surprised', fx:'hop'},
+{m:'가, 갑자기 그러면... 예고라도 하란 말이야...!', f:'blush'},
+{n:'그 뒤로 그녀는 한참 동안 버터맥주 잔만 내려다보고 있었다.'},
+{go:'c4_join2'},
+{l:'c4_e'},
+{m:'뭐? ...!!', f:'surprised'},
+{m:'왜 이제 말해! 아까부터 이러고 있었어?!', f:'angry', fx:'shake'},
+{m:'...너도 마셔. 너도 똑같이 만들어 줄 거야.', f:'smug'},
+{go:'c4_join2'},
+{l:'c4_f'},
+{n:'...그녀는 가게를 나설 때까지 눈치채지 못했고, 지나가던 학생들이 킥킥 웃었다.'},
+{m:'...{name}. 왜 아무도 나한테 말 안 해준 거야?', f:'angry'},
+{go:'c4_join2'},
+{l:'c4_join2'},
+{hide:1},
+
+/* ---------- Chapter 5 ---------- */
+{ch:['CHAPTER 5','크리스마스 무도회']},
+{bg:'hall'},
+{n:'크리스마스 무도회 공지가 붙은 뒤로, 호그와트 전체가 들떠 있었다.'},
+{n:'복도 모퉁이에서, 그녀가 기다렸다는 듯 나타났다.'},
+{m:'...파트너, 정했어?', f:'neutral'},
+{choice:[
+  {t:'"말포이, 나랑 무도회에 같이 가줄래?"', a:15, go:'c5_a'},
+  {t:'"아직 못 정했어."', a:0, go:'c5_b'},
+  {t:'"다른 사람이랑 가기로 했어."', a:-20, go:'c5_c'},
+]},
+{l:'c5_a'},
+{m:'...', f:'surprised'},
+{m:'대답은 이미 정해져 있었어. 물어보는 게 너무 늦잖아, 바보.', f:'blush'},
+{m:'드레스 로브는 초록색이야. 너도 맞춰 와.', f:'smile'},
+{go:'c5_join'},
+{l:'c5_b'},
+{m:'...그럼 빨리 정해.', f:'angry'},
+{m:'아니면... 내가 정해주던가.', f:'shy'},
+{go:'c5_join'},
+{l:'c5_c'},
+{m:'......그래.', f:'sad'},
+{m:'잘됐네. 재밌게 놀아.', f:'neutral'},
+{go:'c5_join'},
+{l:'c5_join'},
+{bg:'ball'},
+{hide:1},
+{n:'무도회 날 밤. 얼음 조각과 요정 불빛으로 장식된 대연회장.'},
+{n:'계단 위에서 내려오는 은빛과 초록빛의 드레스 로브. 모두의 시선이 한곳에 모였다.'},
+{m:'...뭘 그렇게 넋 놓고 봐.', f:'blush'},
+{m:'오늘 밤이 끝나면, 천문탑으로 와. 할 말이 있어.', f:'neutral'},
+{cond:[[75,'end_good'],[45,'end_normal'],[-999,'end_bad']]},
+
+/* ---------- Endings ---------- */
+{l:'end_good'},
+{bg:'tower'},
+{hide:1},
+{n:'자정이 가까운 천문탑. 별빛 아래, 그녀가 난간에 기대어 서 있었다.'},
+{m:'왔네.', f:'neutral'},
+{m:'...너 때문에 다 엉망이야. 계획도, 가문의 기대도, 내 머릿속도.', f:'sad'},
+{m:'그런데 이상하지. 그게 하나도 싫지가 않아.', f:'shy'},
+{m:'좋아해, {name}.\n...아버지가 아시면 기절하시겠지만.', f:'blush'},
+{choice:[
+  {t:'"나도 좋아해, 드레이코."', a:10, go:'eg_a'},
+  {t:'"아버지가 이 일을 들으시게 될 거야."', a:10, go:'eg_b'},
+]},
+{l:'eg_a'},
+{m:'...이름으로 부르지 마. 심장에 안 좋아.', f:'blush', fx:'hop'},
+{m:'당연하지. 이 말포이가 먼저 고백했는데, 거절할 리가 없잖아.', f:'smile'},
+{end:'good'},
+{l:'eg_b'},
+{m:'...푸핫! 진짜, 마지막까지!', f:'smile', fx:'hop'},
+{m:'그래. 들으시라지. 내가 직접 말씀드릴 거야. 내 사람이라고.', f:'shy'},
+{end:'good'},
+
+{l:'end_normal'},
+{bg:'tower'},
+{hide:1},
+{n:'천문탑. 차가운 바람 사이로 그녀의 목소리가 들렸다.'},
+{m:'불러낸 건... 그냥, 고맙다고 말하고 싶어서.', f:'neutral'},
+{m:'넌 좋은 라이벌이야. 내가 인정한 몇 안 되는.', f:'smug'},
+{m:'내년에도 내 옆에서 경쟁해. 도망가면 가만 안 둬.', f:'smile'},
+{n:'그녀가 내민 손을 맞잡았다. 아직은, 이 정도 거리가 우리에게 맞는 것 같았다.'},
+{end:'normal'},
+
+{l:'end_bad'},
+{bg:'tower'},
+{hide:1},
+{n:'약속한 천문탑. 그러나 그녀는 끝내 나타나지 않았다.'},
+{n:'며칠 뒤 복도에서 마주친 그녀는, 처음 만났던 날보다 더 차가운 눈을 하고 있었다.'},
+{m:'...다시는 말 걸지 마.', f:'angry'},
+{n:'백금빛 머리카락이 멀어져 갔다. 그녀는 한 번도 돌아보지 않았다.'},
+{end:'bad'},
+];
+const ENDINGS = {
+  good:  {kind:'TRUE END', ttl:'백금빛 별 아래서', desc:'오만하고 서툰 슬리데린의 공주는, 처음으로 가문이 아닌 자신의 마음을 선택했다.\n— 아버지께 보낼 부엉이 편지는, 아직 쓰는 중이다.'},
+  normal:{kind:'NORMAL END', ttl:'영원한 라이벌', desc:'사랑이라 부르기엔 이르고, 우정이라 부르기엔 뜨거운.\n다음 학년에도, 마법약 교실 옆자리는 여전히 그녀의 것이다.'},
+  bad:   {kind:'BAD END', ttl:'차가운 지하 감옥', desc:'닫힌 마음은 지하 감옥보다 차가웠다.\n…처음부터 다시 시작해 볼까?'},
+};
+const LABELS = {}; S.forEach((c,i)=>{ if(c.l) LABELS[c.l]=i; });
+
+/* =========================================================
+   Engine
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } },
+};
+let st = null;              // {ip, aff, name, house, bg, face, shown}
+let typing = null, full = '', waiting = false, inChoice = false, busy = false;
+let auto = false, skip = false, autoTimer = null, logArr = [];
+
+function sub(t){ return t.replace(/\{name\}/g, st.name).replace(/\{house\}/g, st.house || '???'); }
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),1500); }
+
+function setBg(name, announce=true){
+  st.bg = name;
+  $('bg').className = 'bg-' + name;
+  fx.mode = {train:'dust', hall:'candle', dungeon:'bubble', pitch:'none', library:'dust', snow:'snow', ball:'sparkle', tower:'star'}[name] || 'none';
+  fx.reset();
+  if(announce && BG_NAME[name]){ const l=$('locToast'); l.textContent='— '+BG_NAME[name]+' —'; l.classList.add('on'); clearTimeout(setBg._t); setBg._t=setTimeout(()=>l.classList.remove('on'),2200); }
+}
+function setFace(f, effect){
+  const c = $('chara');
+  if(f && f!==st.face){ st.face=f; c.innerHTML = portrait(f); }
+  if(!st.shown){ st.shown=true; if(!c.innerHTML) c.innerHTML=portrait(st.face||'neutral'); c.classList.add('on'); }
+  if(effect){ c.classList.remove('hop','shake'); void c.offsetWidth; c.classList.add(effect); }
+}
+function hideChara(){ st.shown=false; $('chara').classList.remove('on'); }
+function updAff(){ $('affFill').style.width = st.aff+'%'; $('affNum').textContent = st.aff; }
+function addAff(a){
+  if(!a) return;
+  st.aff = Math.max(0, Math.min(100, st.aff + a)); updAff();
+  const p=document.createElement('div'); p.className='affPop';
+  p.textContent = a>0 ? `💚 +${a}` : `💔 ${a}`; p.style.color = a>0 ? '#9be0b8' : '#ff8a9a';
+  $('game').appendChild(p); setTimeout(()=>p.remove(),1400);
+}
+
+function say(who, text, kind){
+  const tag=$('nameTag'), tx=$('text'), box=$('box');
+  box.classList.remove('hidden','done');
+  tag.className = kind==='n' ? 'empty' : (kind==='y' ? 'player' : '');
+  tag.textContent = who || '';
+  tx.className = kind==='n' ? 'narr' : '';
+  full = sub(text);
+  logArr.push({who: kind==='n' ? '' : who, text: full});
+  if(logArr.length>300) logArr.shift();
+  tx.textContent=''; let i=0;
+  clearInterval(typing);
+  if(skip){ tx.textContent=full; finishLine(); return; }
+  typing = setInterval(()=>{ i++; tx.textContent=full.slice(0,i); if(i>=full.length) finishLine(); }, 32);
+}
+function finishLine(){
+  clearInterval(typing); typing=null; $('text').textContent=full; $('box').classList.add('done'); waiting=true;
+  scheduleAuto();
+}
+function scheduleAuto(){
+  clearTimeout(autoTimer);
+  if(skip) autoTimer=setTimeout(advance, 60);
+  else if(auto) autoTimer=setTimeout(advance, 1200 + full.length*45);
+}
+
+function advance(){
+  if(busy || inChoice || !st) return;
+  if(typing){ finishLine(); return; }
+  waiting=false; clearTimeout(autoTimer);
+  run();
+}
+
+function run(){
+  while(st.ip < S.length){
+    const c = S[st.ip++];
+    if(c.l) continue;
+    if(c.bg){ setBg(c.bg); continue; }
+    if(c.hide){ hideChara(); continue; }
+    if(c.go){ st.ip = LABELS[c.go]; continue; }
+    if(c.cond){ const t=c.cond.find(([min])=>st.aff>=min); st.ip=LABELS[t[1]]; continue; }
+    if(c.ch){ chapterCard(c.ch); return; }
+    if(c.n){ say('', c.n, 'n'); return; }
+    if(c.y){ say(st.name, c.y, 'y'); return; }
+    if(c.m){ setFace(c.f, c.fx); say(M, c.m, 'm'); return; }
+    if(c.choice){ showChoice(c.choice); return; }
+    if(c.end){ showEnding(c.end); return; }
+  }
+}
+
+function chapterCard([num, ttl]){
+  busy=true; setSkip(false);
+  const ch=$('chapter'); ch.querySelector('.num').textContent=num; ch.querySelector('.ttl').textContent=ttl;
+  $('box').classList.add('hidden'); hideChara();
+  ch.style.opacity=0; ch.classList.add('on'); requestAnimationFrame(()=>ch.style.opacity=1);
+  setTimeout(()=>{ ch.style.opacity=0; setTimeout(()=>{ ch.classList.remove('on'); busy=false; run(); },600); }, 2000);
+}
+
+function showChoice(opts){
+  inChoice=true; setSkip(false); clearTimeout(autoTimer);
+  const box=$('choices'); box.innerHTML='';
+  opts.forEach((o,i)=>{
+    const b=document.createElement('button'); b.className='choice'; b.textContent=sub(o.t);
+    b.style.animationDelay = (i*0.08)+'s';
+    b.onclick = e=>{
+      e.stopPropagation();
+      logArr.push({who:'▶ 선택', text:sub(o.t)});
+      if(o.set) Object.assign(st, o.set);
+      addAff(o.a);
+      box.classList.remove('on'); inChoice=false;
+      st.ip = LABELS[o.go]; run();
+    };
+    box.appendChild(b);
+  });
+  box.classList.add('on');
+  setTimeout(()=>box.querySelector('.choice')?.focus(), 50);
+}
+
+function showEnding(k){
+  const e=ENDINGS[k]; setSkip(false); setAuto(false);
+  const seen = store.get('malfoyts_endings') || {}; seen[k]=true; store.set('malfoyts_endings', seen);
+  const el=$('ending');
+  el.querySelector('.kind').textContent=e.kind; el.querySelector('.ttl').textContent=e.ttl;
+  el.querySelector('.desc').innerText=e.desc + `\n\n최종 호감도: ${st.aff}`;
+  setTimeout(()=>el.classList.add('on'), 600);
+}
+
+/* ---------- menu ---------- */
+function setAuto(v){ auto=v; $('btnAuto').classList.toggle('act',v); if(v && waiting) scheduleAuto(); }
+function setSkip(v){ skip=v; $('btnSkip').classList.toggle('act',v); if(v){ if(typing) finishLine(); else if(waiting) scheduleAuto(); } }
+
+function newGame(name){
+  st = {ip:0, aff:20, name, house:'', bg:'black', face:'neutral', shown:false};
+  logArr=[]; $('chara').innerHTML=''; $('chara').classList.remove('on');
+  enterGame(); run();
+}
+function enterGame(){
+  ['title','nameScreen','ending','logScreen'].forEach(id=>$(id).classList.remove('on'));
+  $('hud').style.display='flex'; updAff();
+}
+function saveGame(){
+  if(!st) return;
+  // save at the start of the current line so it replays on load
+  const snap = {...st, ip: Math.max(0, st.ip-1), log: logArr.slice(-60)};
+  toast(store.set('malfoyts_save', snap) ? '💾 저장했습니다' : '저장에 실패했습니다');
+  refreshTitle();
+}
+function loadGame(){
+  const s = store.get('malfoyts_save');
+  if(!s){ toast('저장된 데이터가 없습니다'); return; }
+  clearInterval(typing); typing=null; clearTimeout(autoTimer); setAuto(false); setSkip(false);
+  $('choices').classList.remove('on'); inChoice=false; busy=false;
+  logArr = s.log || []; delete s.log;
+  st = {...s, shown:false};
+  enterGame(); setBg(st.bg, false);
+  const c=$('chara'); c.innerHTML=portrait(st.face); c.classList.remove('on');
+  // rewind to a safe instruction (choice / line) and replay
+  run(); toast('📂 불러왔습니다');
+}
+function toTitle(){
+  clearInterval(typing); typing=null; clearTimeout(autoTimer); setAuto(false); setSkip(false);
+  st=null; $('hud').style.display='none'; $('box').classList.add('hidden'); $('choices').classList.remove('on'); inChoice=false;
+  $('chara').classList.remove('on'); $('bg').className='bg-black'; fx.mode='none'; fx.reset();
+  ['ending','logScreen'].forEach(id=>$(id).classList.remove('on'));
+  refreshTitle(); $('title').classList.add('on');
+}
+function refreshTitle(){
+  $('tLoad').disabled = !store.get('malfoyts_save');
+  const seen = store.get('malfoyts_endings') || {};
+  $('endList').innerHTML = '수집한 엔딩<br>' + Object.entries(ENDINGS).map(([k,e])=> seen[k] ? `✦ ${e.kind} · ${e.ttl}` : `✧ ${e.kind} · ???`).join('<br>');
+}
+function openLog(){
+  $('logList').innerHTML = logArr.map(r=>`<div class="row">${r.who?`<span class="who">${esc(r.who)}</span>`:''}${esc(r.text).replace(/\n/g,'<br>')}</div>`).join('') || '<div class="row">기록이 없습니다.</div>';
+  $('logScreen').classList.add('on'); $('logList').scrollTop = 1e9;
+}
+function esc(s){ return s.replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+$('box').addEventListener('click', advance);
+$('btnAuto').onclick = e=>{ e.stopPropagation(); setAuto(!auto); };
+$('btnSkip').onclick = e=>{ e.stopPropagation(); setSkip(!skip); };
+$('btnLog').onclick  = e=>{ e.stopPropagation(); openLog(); };
+$('btnSave').onclick = e=>{ e.stopPropagation(); saveGame(); };
+$('btnLoad').onclick = e=>{ e.stopPropagation(); loadGame(); };
+$('btnTitle').onclick= e=>{ e.stopPropagation(); if(confirm('타이틀로 돌아갈까요? 저장하지 않은 진행은 사라집니다.')) toTitle(); };
+$('logClose').onclick = ()=>$('logScreen').classList.remove('on');
+$('tStart').onclick = ()=>{ $('nameScreen').classList.add('on'); $('nameInput').value=''; setTimeout(()=>$('nameInput').focus(),50); };
+$('tLoad').onclick = loadGame;
+$('nameOk').onclick = ()=>{ const n=$('nameInput').value.trim() || '해리엇'; newGame(n); };
+$('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('nameOk').click(); });
+$('endBack').onclick = toTitle;
+document.addEventListener('keydown', e=>{
+  if(!st || $('logScreen').classList.contains('on')){ if(e.key==='Escape') $('logScreen').classList.remove('on'); return; }
+  if((e.key===' '||e.key==='Enter') && !inChoice && document.activeElement.tagName!=='BUTTON'){ e.preventDefault(); advance(); }
+  if(e.key==='Control') setSkip(true);
+  if(e.key==='a' || e.key==='A') setAuto(!auto);
+});
+document.addEventListener('keyup', e=>{ if(e.key==='Control') setSkip(false); });
+
+/* =========================================================
+   Particle FX
+   ========================================================= */
+const fx = (()=>{
+  const cv=$('fx'), ctx=cv.getContext('2d'); let W,H,P=[]; const o={mode:'none'};
+  function size(){ W=cv.width=cv.clientWidth*devicePixelRatio; H=cv.height=cv.clientHeight*devicePixelRatio; }
+  addEventListener('resize', size); size();
+  function mk(){
+    const r=Math.random, d=devicePixelRatio;
+    switch(o.mode){
+      case 'snow':   return {x:r()*W,y:r()*H,vx:(r()-.5)*.4*d,vy:(.5+r())*d,s:(1.5+r()*3)*d,c:'255,255,255',a:.8};
+      case 'star':   return {x:r()*W,y:r()*H*.75,vx:0,vy:0,s:(.6+r()*1.6)*d,c:'255,250,230',a:r(),tw:r()*6};
+      case 'candle': return {x:r()*W,y:r()*H*.6,vx:0,vy:0,s:(2+r()*2)*d,c:'255,200,120',a:.9,tw:r()*6,glow:1};
+      case 'bubble': return {x:r()*W,y:H+r()*H,vx:0,vy:-(.3+r()*.8)*d,s:(2+r()*5)*d,c:'120,230,160',a:.35,ring:1};
+      case 'sparkle':return {x:r()*W,y:r()*H,vx:(r()-.5)*.3*d,vy:(.2+r()*.4)*d,s:(1+r()*2.5)*d,c:'220,210,255',a:r(),tw:r()*6,glow:1};
+      case 'dust':   return {x:r()*W,y:r()*H,vx:(r()-.3)*.25*d,vy:(r()-.5)*.15*d,s:(.8+r()*1.5)*d,c:'255,230,190',a:.3};
+    }
+  }
+  o.reset = ()=>{ P=[]; const n={snow:140,star:160,candle:36,bubble:40,sparkle:90,dust:60}[o.mode]||0; for(let i=0;i<n;i++) P.push(mk()); };
+  let t=0;
+  (function loop(){
+    t+=.016; ctx.clearRect(0,0,W,H);
+    for(const p of P){
+      p.x+=p.vx; p.y+=p.vy;
+      if(o.mode==='candle') p.y += Math.sin(t*1.5+p.tw)*.25;
+      if(p.y>H+10){ p.y=-10; p.x=Math.random()*W; }
+      if(p.y<-20 && p.vy<0){ p.y=H+10; p.x=Math.random()*W; }
+      if(p.x>W+10) p.x=-10; if(p.x<-10) p.x=W+10;
+      const a = p.tw!==undefined ? (.35+.65*Math.abs(Math.sin(t*1.3+p.tw)))*(p.a||1) : p.a;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2);
+      if(p.ring){ ctx.strokeStyle=`rgba(${p.c},${a})`; ctx.lineWidth=1.2*devicePixelRatio; ctx.stroke(); }
+      else { if(p.glow){ ctx.shadowBlur=12*devicePixelRatio; ctx.shadowColor=`rgba(${p.c},1)`; } ctx.fillStyle=`rgba(${p.c},${a})`; ctx.fill(); ctx.shadowBlur=0; }
+    }
+    requestAnimationFrame(loop);
+  })();
+  return o;
+})();
+
+/* ---------- boot ---------- */
+$('titleChara').innerHTML = portrait('smug');
+refreshTitle();
+</script>
+</body>
+</html>
